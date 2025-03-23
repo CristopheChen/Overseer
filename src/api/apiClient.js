@@ -1,5 +1,5 @@
 // API client for interacting with the backend
-const API_BASE_URL = "http://localhost:3001/api";
+const API_BASE_URL = "http://localhost:3002/api";
 
 // Ensure we don't have trailing slashes that might cause double-slash issues
 const getApiUrl = (endpoint) => {
