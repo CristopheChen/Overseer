@@ -305,7 +305,7 @@ export default function Home() {
     }, 300);
 
     try {
-      // Upload the file to the backend
+      // Upload the file to the backend with cluster count
       const response = (await uploadDataset(
         uploadedFile,
         clusterCount
@@ -866,14 +866,14 @@ export default function Home() {
                       id="cluster-count"
                       type="range"
                       min="1"
-                      max="6"
+                      max="10"
                       value={clusterCount}
                       onChange={handleClusterCountChange}
                       className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
                     />
                     <div className="flex justify-between text-[10px] text-gray-500">
                       <span>1</span>
-                      <span>6</span>
+                      <span>10</span>
                     </div>
                   </div>
 
@@ -937,13 +937,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Add this somewhere visible in your UI, perhaps near the top right action buttons */}
-      {clusterData && clusterData.clusters && (
-        <div className="fixed top-24 right-10 z-20 bg-white/90 px-3 py-2 rounded-md shadow text-sm">
-          <span className="font-medium">Showing {clusterCount} of {Object.keys(clusterData.clusters).length} clusters</span>
         </div>
       )}
     </main>
