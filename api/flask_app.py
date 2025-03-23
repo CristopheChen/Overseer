@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Enable CORS with more specific configuration
 
 # Create uploads directory if it doesn't exist
 UPLOAD_FOLDER = Path("uploads")
@@ -429,4 +429,4 @@ def get_job_status(job_id):
 
 if __name__ == '__main__':
     # Run the Flask app
-    app.run(debug=True, host='0.0.0.0', port=3001) 
+    app.run(debug=True, host='0.0.0.0', port=3002) 

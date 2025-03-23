@@ -215,12 +215,7 @@ export default function Home() {
   }, [jobId, jobStatus]);
 
   const handleUpload = async () => {
-    if (!uploadedFile) {
-      setShowUploadModal(true);
-      return;
-    }
-
-    processUpload();
+    setShowUploadModal(true);
   };
 
   const handleFilter = async () => {
