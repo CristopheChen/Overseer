@@ -860,11 +860,29 @@ export default function SphereScene({
     return index >= 0 ? String.fromCharCode(65 + (index % 26)) : "?";
   };
 
-  // Add this function to clean markdown from analysis text
+  // Update this function to clean all markdown from analysis text
   const cleanAnalysisText = (text: string) => {
     if (!text) return "";
-    // Remove markdown asterisks from the beginning of the text
-    return text.replace(/^\*\*(.*?)\*\*/m, "$1");
+    
+    // Remove all markdown formatting
+    return text
+      // Remove bold formatting
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      // Remove italic formatting
+      .replace(/\*(.*?)\*/g, "$1")
+      // Remove heading markers
+      .replace(/^#+\s+/gm, "")
+      // Remove backticks for code
+      .replace(/`(.*?)`/g, "$1")
+      // Remove links but keep the text
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      // Remove horizontal rules
+      .replace(/^\s*[-*_]{3,}\s*$/gm, "")
+      // Remove blockquotes
+      .replace(/^>\s+/gm, "")
+      // Remove list markers
+      .replace(/^[\s-]*[-*+]\s+/gm, "")
+      .replace(/^\s*\d+\.\s+/gm, "");
   };
 
   // Component return: conditionally render if not clusters

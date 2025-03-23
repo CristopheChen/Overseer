@@ -1,7 +1,7 @@
 "use client";
 
 import SphereScene from "../components/SphereScene";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   getCleanedResumes,
   getUnbiasingSummary,
@@ -197,7 +197,6 @@ export default function Home() {
               setUploadStatus("idle");
               setShowSuccessNotification(false);
             }, 2000);
-            setShowDefaultObjects(false);
           } else if (status.status === "failed") {
             setUploadStatus("error");
             setIsLoading(false);
@@ -396,7 +395,9 @@ export default function Home() {
   };
 
   const handleClusterCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setClusterCount(parseInt(e.target.value));
+    const newCount = parseInt(e.target.value);
+    console.log(`Cluster count changed to: ${newCount}`);
+    setClusterCount(newCount);
   };
 
   const handleAggressivenessChange = (
@@ -447,16 +448,73 @@ export default function Home() {
     };
   }, []);
 
+  // Add this function to filter clusters based on the slider value
+  const getFilteredClusterData = useCallback(() => {
+    if (!clusterData || !clusterData.clusters) return null;
+    
+    // Get all cluster IDs
+    const allClusterIds = Object.keys(clusterData.clusters);
+    
+    // Sort clusters by size (optional, depends on how you want to prioritize)
+    const sortedClusterIds = allClusterIds.sort((a, b) => 
+      clusterData.clusters[b].size - clusterData.clusters[a].size
+    );
+    
+    // Take only the first n clusters based on slider
+    const selectedClusterIds = sortedClusterIds.slice(0, clusterCount);
+    
+    // Create a filtered version of the cluster data
+    const filteredClusters: {[key: string]: any} = {};
+    selectedClusterIds.forEach(id => {
+      filteredClusters[id] = clusterData.clusters[id];
+    });
+    
+    return {
+      ...clusterData,
+      clusters: filteredClusters
+    };
+  }, [clusterData, clusterCount]);
+
+  // Use the filtered data when passing to SphereScene
+  useEffect(() => {
+    // This effect runs when clusterCount or clusterData changes
+    console.log(`Updating visible clusters to show ${clusterCount} clusters`);
+  }, [clusterCount, clusterData]);
+
+  const fetchEmbeddings = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch unbiased embeddings
+      const unbiasedData = await getUnbiasedEmbeddingsData() as EmbeddingsData;
+      setEmbeddingsData(unbiasedData);
+      
+      // Fetch removed embeddings
+      const removedData = await getRemovedEmbeddingsData() as EmbeddingsData;
+      setRemovedEmbeddingsData(removedData);
+      
+      // Fetch cluster data
+      const clustersInfo = await getAllClustersInfo();
+      setClusterData(clustersInfo);
+      
+      // Only hide default objects after embeddings are fetched
+      setShowDefaultObjects(false);
+    } catch (error) {
+      console.error("Error fetching embeddings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="relative min-h-screen">
       {/* Main content area - always render SphereScene now */}
       <div className="w-full h-screen">
         {activeTab === "clusters" ? (
           <SphereScene
-            clusterData={clusterData}
+            clusterData={getFilteredClusterData()}
             unbiasedEmbeddings={embeddingsData}
             removedEmbeddings={removedEmbeddingsData}
-            clusterEmbeddings={clusterData}
+            clusterEmbeddings={getFilteredClusterData()}
             clusterCount={clusterCount}
             activeTab={activeTab}
             showDefaultObjects={showDefaultObjects}
@@ -533,7 +591,7 @@ export default function Home() {
         </button>
 
         <button
-          onClick={handleFetchEmbeddingsInfo}
+          onClick={fetchEmbeddings}
           className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-md shadow"
         >
           Fetch Embeddings Info
@@ -879,6 +937,13 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add this somewhere visible in your UI, perhaps near the top right action buttons */}
+      {clusterData && clusterData.clusters && (
+        <div className="fixed top-24 right-10 z-20 bg-white/90 px-3 py-2 rounded-md shadow text-sm">
+          <span className="font-medium">Showing {clusterCount} of {Object.keys(clusterData.clusters).length} clusters</span>
         </div>
       )}
     </main>
