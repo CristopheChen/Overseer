@@ -570,6 +570,7 @@ export default function Home() {
         handleDragLeave={handleDragLeave}
         handleDrop={handleDrop}
         triggerFileInput={triggerFileInput}
+        fileInputRef={fileInputRef}
         handleUseExampleDataset={handleUseExampleDataset}
         exampleDatasetName={exampleDatasetName}
         clusterCount={clusterCount}

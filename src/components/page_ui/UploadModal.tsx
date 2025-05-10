@@ -12,6 +12,7 @@ interface UploadModalProps {
   handleDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
   handleDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   triggerFileInput: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleUseExampleDataset: () => void;
   exampleDatasetName: string | null;
   clusterCount: number;
@@ -32,6 +33,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
   handleDragLeave,
   handleDrop,
   triggerFileInput,
+  fileInputRef,
   handleUseExampleDataset,
   exampleDatasetName,
   clusterCount,
@@ -41,8 +43,6 @@ const UploadModal: React.FC<UploadModalProps> = ({
   processUpload,
   isLoading,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   if (!showUploadModal) {
     return null;
   }
@@ -93,7 +93,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
           >
             <input
               type="file"
-              ref={fileInputRef} // This ref might need to be passed from parent if triggerFileInput is in parent
+              ref={fileInputRef}
               className="hidden"
               accept=".csv"
               onChange={handleFileChange}
