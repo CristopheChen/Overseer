@@ -95,6 +95,7 @@ export default function Home() {
   const [showSuccessNotification, setShowSuccessNotification] =
     useState<boolean>(false);
   const [showDefaultObjects, setShowDefaultObjects] = useState<boolean>(true);
+  const [exampleDatasetName, setExampleDatasetName] = useState<string | null>(null); // Added for example dataset
 
   useEffect(() => {
     const fetchData = async () => {
@@ -282,6 +283,29 @@ export default function Home() {
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleUseExampleDataset = async () => {
+    try {
+      setIsLoading(true); // Show some loading indication
+      const response = await fetch("/data/example_resume_dataset.csv");
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch example dataset: ${response.statusText}`
+        );
+      }
+      const blob = await response.blob();
+      const exampleFile = new File([blob], "example_resume_dataset.csv", {
+        type: "text/csv",
+      });
+      setUploadedFile(exampleFile);
+      setExampleDatasetName(exampleFile.name); // Store the name of the example dataset
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading example dataset:", error);
+      alert("Could not load the example dataset. Make sure 'public/data/example_resume_dataset.csv' exists.");
+      setIsLoading(false);
+    }
   };
 
   const processUpload = async () => {
@@ -839,6 +863,23 @@ export default function Home() {
                   Supports CSV files with Resume_str column
                 </p>
               </div>
+
+              {/* Button to use example dataset */}
+              <div className="text-center mb-4">
+                <button
+                  onClick={handleUseExampleDataset}
+                  disabled={isLoading}
+                  className="text-sm text-blue-500 hover:text-blue-700 disabled:opacity-50"
+                >
+                  Or use an Example Dataset
+                </button>
+              </div>
+              
+              {exampleDatasetName && (
+                <p className="text-center text-sm text-green-600 mb-4">
+                  Using example: {exampleDatasetName}
+                </p>
+              )}
 
               {/* Control panel */}
               <div className="bg-gray-50 p-4 rounded-xl mb-6">
