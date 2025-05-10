@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { vectors, Vector6D } from "../data/spheres";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { getClusterAnalysis } from "../api/apiClient";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
+import HoverInfoBox from "./sphere_scene/HoverInfoBox";
+import SceneInfoBox from "./sphere_scene/SceneInfoBox";
+import ClusterControlPanel from "./sphere_scene/ClusterControlPanel";
+
+// [x, y, z, hue, saturation, brightness]
+export type Vector6D = [number, number, number, number, number, number];
 
 // Extended interface for our data points
 interface DataPoint extends Vector6D {
@@ -70,7 +75,6 @@ interface ClusterAnalysis {
 interface SphereSceneProps {
   unbiasedEmbeddings?: EmbeddingsData | null;
   removedEmbeddings?: EmbeddingsData | null;
-  activeTab?: string; // Accept any string
   clusterData?: any;
   clusterEmbeddings?: ClusterData | null; // Add with proper typing
   showDefaultObjects?: boolean; // Add this prop
@@ -88,7 +92,6 @@ declare global {
 export default function SphereScene({
   unbiasedEmbeddings,
   removedEmbeddings,
-  activeTab = "clusters",
   clusterEmbeddings,
   clusterCount,
   showDefaultObjects = true, // Default to showing the objects
@@ -179,7 +182,7 @@ export default function SphereScene({
 
   // 1. First effect: basic scene setup (if clusters tab)
   useEffect(() => {
-    if (activeTab !== "clusters" || !canvasRef.current) return;
+    if (!canvasRef.current) return;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf8f9fa);
@@ -281,7 +284,7 @@ export default function SphereScene({
       renderer.dispose();
       controls.dispose();
     };
-  }, [activeTab]);
+  }, []);
 
   // Add effect to show/hide default objects based on prop
   useEffect(() => {
@@ -292,7 +295,7 @@ export default function SphereScene({
 
   // 2. Second effect: convert unbiasedEmbeddings into data points if clusters tab
   useEffect(() => {
-    if (activeTab !== "clusters" || !unbiasedEmbeddings?.embeddings) return;
+    if (!unbiasedEmbeddings?.embeddings) return;
 
     try {
       const points = unbiasedEmbeddings.embeddings
@@ -316,11 +319,10 @@ export default function SphereScene({
       console.error("Error converting embeddings:", error);
       setApiDataPoints([]);
     }
-  }, [unbiasedEmbeddings, activeTab]);
+  }, [unbiasedEmbeddings]);
 
   // 3. Third effect: actually create spheres (or points) from dataPoints if clusters tab
   useEffect(() => {
-    if (activeTab !== "clusters") return;
     if (!sceneRef.current) return;
 
     // Clear previous objects if needed
@@ -355,12 +357,11 @@ export default function SphereScene({
         }
       });
     };
-  }, [apiDataPoints, activeTab]);
+  }, [apiDataPoints]);
 
   // 4. Fourth effect: handle removedEmbeddings similarly if needed
   useEffect(() => {
     if (
-      activeTab !== "clusters" ||
       !removedEmbeddings?.embeddings ||
       !sceneRef.current
     )
@@ -399,11 +400,11 @@ export default function SphereScene({
         }
       });
     };
-  }, [removedEmbeddings, activeTab]);
+  }, [removedEmbeddings]);
 
   // The cluster visualization effect
   useEffect(() => {
-    if (activeTab !== "clusters" || !clusterEmbeddings || !sceneRef.current) {
+    if (!clusterEmbeddings || !sceneRef.current) {
       return;
     }
 
@@ -804,7 +805,7 @@ export default function SphereScene({
       // Clean up the window object
       delete window.recenterCamera;
     };
-  }, [clusterEmbeddings, activeTab, visibleClusters, selectedCluster]);
+  }, [clusterEmbeddings, visibleClusters, selectedCluster]);
 
   // Toggle cluster visibility handler
   const toggleClusterVisibility = (clusterId: string) => {
@@ -895,160 +896,30 @@ export default function SphereScene({
     return cleanedText;
   };
 
-  // Component return: conditionally render if not clusters
-  if (activeTab !== "clusters") {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6 pt-24">
-        {/* Logo at top left with good padding - persistent across all tabs */}
-        <div className="absolute top-8 left-10 z-10">
-          <h1 className="font-['var(--font-playfair-display)'] text-6xl font-bold text-black drop-shadow-md">
-            Overseer
-          </h1>
-        </div>
-        {/* Empty div instead of placeholder text */}
-      </div>
-    );
-  }
-
-  // Otherwise, show the 3D canvas
+  // Main component return - removed conditional rendering based on activeTab
   return (
     <div className="relative w-full h-full" ref={containerRef}>
       <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Hover Information Box - positioned based on sphere location */}
-      {hoveredNode && hoverPosition && (
-        <div
-          className="absolute z-10 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-md max-w-xs"
-          style={{
-            left: `${hoverPosition.x}px`,
-            top: `${hoverPosition.y}px`,
-            transform: "translate(0, -100%)",
-          }}
-        >
-          <h3 className="text-sm font-semibold text-gray-800">
-            Node Information
-          </h3>
-          <div className="text-sm text-gray-600 mt-1">
-            <p>ID: {hoveredNode.id}</p>
-            <p>Cluster: {hoveredNode.cluster_id}</p>
-          </div>
-        </div>
-      )}
+      <HoverInfoBox hoveredNode={hoveredNode} hoverPosition={hoverPosition} />
 
-      {/* Increase top padding further to position under the title */}
-      <div className="absolute top-28 left-10 z-10 space-y-4">
-        {/* Title removed from here - now in page.tsx */}
-
-        {/* Cluster Panel */}
-        {clusterEmbeddings && activeTab === "clusters" && (
-          <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-md max-w-xs">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">
-              Clusters
-            </h3>
-
-            {/* Rest of cluster panel content */}
-            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
-              {/* Cluster items */}
-              {Object.entries(clusterEmbeddings?.clusters || {}).map(
-                ([clusterId, clusterInfo]: [string, any], index) => {
-                  const clusterColor =
-                    clusterColors[index % clusterColors.length];
-                  // Use letters instead of cluster IDs
-                  const clusterLetter = String.fromCharCode(65 + (index % 26));
-                  return (
-                    <div
-                      key={clusterId}
-                      className="flex items-center space-x-2 text-black py-0.5"
-                    >
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`cluster-${clusterId}`}
-                          checked={visibleClusters[clusterId] !== false}
-                          onChange={() => toggleClusterVisibility(clusterId)}
-                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </div>
-                      <label
-                        htmlFor={`cluster-${clusterId}`}
-                        className="flex-grow flex items-center cursor-pointer text-xs text-black"
-                      >
-                        <span
-                          className="inline-block w-3 h-3 mr-1.5 rounded-full"
-                          style={{
-                            backgroundColor: `#${clusterColor.getHexString()}`,
-                          }}
-                        ></span>
-                        Cluster {clusterLetter}
-                        {clusterInfo.size && (
-                          <span className="text-xs text-gray-500 ml-1">
-                            ({clusterInfo.size})
-                          </span>
-                        )}
-                      </label>
-                      <button
-                        onClick={() => selectCluster(clusterId)}
-                        className="ml-auto text-xs text-blue-500 hover:text-blue-700 font-medium"
-                      >
-                        {selectedCluster === clusterId ? "Hide" : "Info"}
-                      </button>
-                    </div>
-                  );
-                }
-              )}
-            </div>
-
-            {/* Recenter button */}
-            <button
-              onClick={handleRecenter}
-              className="mt-2.5 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium rounded text-xs transition-colors duration-200 flex justify-center items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1.5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Recenter View
-            </button>
-          </div>
-        )}
-
-        {/* Cluster Analysis Panel - smaller */}
-        {selectedCluster && (
-          <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md max-h-[50vh] max-w-xs overflow-y-auto">
-            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 bg-blue-50 -m-3 p-3 rounded-t-lg">
-              <h3 className="text-base font-bold text-blue-700">
-                Cluster {getClusterLetter(selectedCluster, clusterEmbeddings)}{" "}
-                Analysis
-              </h3>
-              <button
-                onClick={() => setSelectedCluster(null)}
-                className="text-gray-500 hover:text-gray-700 text-sm"
-              >
-                <span className="sr-only">Close</span>✕
-              </button>
-            </div>
-            <div className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed mt-2">
-              {clusterAnalyses[selectedCluster]
-                ? cleanAnalysisText(clusterAnalyses[selectedCluster], selectedCluster)
-                : "Loading analysis..."}
-            </div>
-          </div>
-        )}
-      </div>
+      <ClusterControlPanel
+        clusterEmbeddings={clusterEmbeddings === undefined ? null : clusterEmbeddings}
+        clusterColors={clusterColors}
+        visibleClusters={visibleClusters}
+        toggleClusterVisibility={toggleClusterVisibility}
+        selectCluster={selectCluster}
+        selectedCluster={selectedCluster}
+        handleRecenter={handleRecenter}
+        clusterAnalyses={clusterAnalyses}
+        setSelectedCluster={setSelectedCluster}
+        getClusterLetter={getClusterLetter}
+        cleanAnalysisText={cleanAnalysisText}
+      />
 
       {/* Information box in bottom right corner */}
-      <div className="absolute bottom-4 right-4 bg-gray-700/80 text-white p-3 rounded-lg shadow-lg max-w-xs">
-        <p className="text-sm">Click on spheres to view details</p>
-        <p className="text-sm">Drag to rotate | Scroll to zoom</p>
-      </div>
+      <SceneInfoBox />
     </div>
   );
 }

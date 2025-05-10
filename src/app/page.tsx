@@ -14,6 +14,12 @@ import {
   getUnbiasedEmbeddingsData,
   getRemovedEmbeddingsData,
 } from "../api/apiClient";
+import PageLogo from "../components/page_ui/PageLogo";
+import ActionButtons from "../components/page_ui/ActionButtons";
+import JobStatusDisplay from "../components/page_ui/JobStatusDisplay";
+import UploadProgressOverlay from "../components/page_ui/UploadProgressOverlay";
+import SuccessNotification from "../components/page_ui/SuccessNotification";
+import UploadModal from "../components/page_ui/UploadModal";
 
 // Define interfaces for our API responses
 interface Resume {
@@ -74,7 +80,6 @@ export default function Home() {
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("clusters");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
@@ -87,7 +92,6 @@ export default function Home() {
   const [clusterData, setClusterData] = useState<any>(null);
   const [clusterCount, setClusterCount] = useState<number>(5); // Default number of clusters
   const [aggressiveness, setAggressiveness] = useState<number>(50); // Default aggressiveness (0-100)
-  const [isTabTransitioning, setIsTabTransitioning] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "uploading" | "processing" | "complete" | "error"
@@ -430,26 +434,6 @@ export default function Home() {
     setAggressiveness(parseInt(e.target.value));
   };
 
-  // Add this function to handle tab switching with delay
-  const handleTabSwitch = (tab: string) => {
-    // If already on this tab or transitioning, do nothing
-    if (activeTab === tab || isTabTransitioning) return;
-
-    // If switching from analysis to clusters, add delay
-    if (activeTab === "bias" && tab === "clusters") {
-      setIsTabTransitioning(true);
-
-      // Set a timeout to actually change the tab after 500ms
-      setTimeout(() => {
-        setActiveTab(tab);
-        setIsTabTransitioning(false);
-      }, 75);
-    } else {
-      // For other transitions, switch immediately
-      setActiveTab(tab);
-    }
-  };
-
   // Update the CSS animation duration in globals.css or add this style tag to your layout.tsx
   useEffect(() => {
     // Add a style tag to the document head
@@ -531,455 +515,71 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen">
-      {/* Main content area - always render SphereScene now */}
+      {/* Main content area - SphereScene is now effectively always rendered */}
       <div className="w-full h-screen">
-        {activeTab === "clusters" ? (
-          <SphereScene
-            clusterData={getFilteredClusterData()}
-            unbiasedEmbeddings={embeddingsData}
-            removedEmbeddings={removedEmbeddingsData}
-            clusterEmbeddings={getFilteredClusterData()}
-            clusterCount={clusterCount}
-            activeTab={activeTab}
-            showDefaultObjects={showDefaultObjects}
-          />
-        ) : (
-          <></>
-        )}
+        {/* Simplified: SphereScene is rendered if activeTab is clusters (which it always should be) */}
+        <SphereScene
+          clusterData={getFilteredClusterData()}
+          unbiasedEmbeddings={embeddingsData}
+          removedEmbeddings={removedEmbeddingsData}
+          clusterEmbeddings={getFilteredClusterData()} // This prop might need review based on SphereScene's needs
+          clusterCount={clusterCount}
+          showDefaultObjects={showDefaultObjects}
+        />
       </div>
 
       {/* Logo at top left with good padding - persistent across all tabs */}
-      <div className="fixed top-8 left-10 z-20">
-        <h1 className="font-serif text-6xl text-black drop-shadow-md">
-          Overseer
-        </h1>
-      </div>
-
-      {/* Navigation Tabs - updated to use handleTabSwitch */}
-      <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-20">
-        <div className="bg-white/90 rounded-full shadow-lg p-1 flex relative">
-          {/* Animated background that moves based on active tab */}
-          <div
-            className={`absolute top-1 bottom-1 rounded-full bg-black transition-all duration-300 ease-in-out ${
-              activeTab === "clusters"
-                ? "left-1 right-[calc(50%+1px)]"
-                : "left-[calc(50%+1px)] right-1"
-            }`}
-          />
-          {/* <button
-            onClick={() => handleTabSwitch("clusters")}
-            disabled={isTabTransitioning}
-            className={`px-8 py-3 rounded-full text-lg font-medium transition-all relative z-10 ${
-              activeTab === "clusters"
-                ? "text-white"
-                : "text-gray-700 hover:text-gray-900"
-            } ${isTabTransitioning ? "cursor-not-allowed opacity-70" : ""}`}
-          >
-            Clusters
-          </button>
-          <button
-            onClick={() => handleTabSwitch("bias")}
-            disabled={isTabTransitioning}
-            className={`px-8 py-3 rounded-full text-lg font-medium transition-all relative z-10 ${
-              activeTab === "bias"
-                ? "text-white"
-                : "text-gray-700 hover:text-gray-900"
-            } ${isTabTransitioning ? "cursor-not-allowed opacity-70" : ""}`}
-          >
-            Analysis
-          </button> */}
-        </div>
-      </div>
+      <PageLogo />
 
       {/* Action buttons - vertical on right side */}
-      <div className="fixed right-10 top-16 z-20 flex flex-col space-y-4">
-        <button
-          onClick={handleUpload}
-          className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-md shadow"
-        >
-          Upload
-        </button>
-
-        <button
-          onClick={handleFilter}
-          className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-md shadow"
-        >
-          Get Unbiased Data
-        </button>
-
-        <button
-          onClick={handleDownload}
-          className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-md shadow"
-        >
-          Download Summary
-        </button>
-
-        <button
-          onClick={fetchEmbeddings}
-          className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-md shadow"
-        >
-          Fetch Embeddings Info
-        </button>
-      </div>
+      <ActionButtons 
+        handleUpload={handleUpload}
+        handleFilter={handleFilter}
+        handleDownload={handleDownload}
+        fetchEmbeddings={fetchEmbeddings}
+      />
 
       {/* Status display if there's an active job */}
-      {jobId && jobStatus && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-          <h3 className="text-lg font-bold mb-2">
-            Job Status: {jobStatus.charAt(0).toUpperCase() + jobStatus.slice(1)}
-          </h3>
-          <p className="text-sm">Job ID: {jobId}</p>
-          {processingLog && (
-            <div className="mt-2">
-              <details>
-                <summary className="cursor-pointer text-blue-500">
-                  View logs
-                </summary>
-                <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded max-h-40 overflow-auto">
-                  {processingLog}
-                </pre>
-              </details>
-            </div>
-          )}
-        </div>
-      )}
+      <JobStatusDisplay 
+        jobId={jobId} 
+        jobStatus={jobStatus} 
+        processingLog={processingLog} 
+      />
 
       {/* New Upload Progress Overlay */}
-      {uploadStatus !== "idle" && uploadStatus !== "complete" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-fadeIn">
-            <div className="text-center">
-              {uploadStatus === "uploading" && (
-                <>
-                  <div className="mb-4">
-                    <svg
-                      className="w-16 h-16 mx-auto text-blue-500 animate-bounce"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-black">
-                    Uploading {uploadedFile?.name}
-                  </h3>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                    <div
-                      className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-gray-600">
-                    Please wait while we upload your file...
-                  </p>
-                </>
-              )}
-
-              {uploadStatus === "processing" && (
-                <>
-                  <div className="mb-4">
-                    <svg
-                      className="w-16 h-16 mx-auto text-blue-500 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-black">
-                    Processing Data
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Analyzing and clustering your data...
-                  </p>
-                  <div className="flex justify-center space-x-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150"></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-300"></div>
-                  </div>
-                </>
-              )}
-
-              {uploadStatus === "error" && (
-                <>
-                  <div className="mb-4">
-                    <svg
-                      className="w-16 h-16 mx-auto text-red-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-red-600">
-                    Processing Failed
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    There was an error processing your file.
-                  </p>
-                  <button
-                    onClick={() => setUploadStatus("idle")}
-                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Close
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <UploadProgressOverlay 
+        uploadStatus={uploadStatus}
+        uploadedFile={uploadedFile}
+        uploadProgress={uploadProgress}
+        setUploadStatus={setUploadStatus}
+      />
 
       {/* Success notification at bottom right of screen, above instructions box */}
-      {showSuccessNotification && (
-        <div className="fixed bottom-28 right-4 z-50 bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg animate-fadeOut w-full max-w-md">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-green-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">
-                Processing complete! Your data is ready.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <SuccessNotification showSuccessNotification={showSuccessNotification} />
 
       {/* Upload Modal with Backdrop Blur */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Blurred backdrop */}
-          <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={() => setShowUploadModal(false)}
-          ></div>
-
-          {/* Modal content - updated to match the screenshot */}
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all duration-300 ease-out animate-fadeIn">
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-semibold text-gray-900">
-                  Upload CSV Data
-                </h3>
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Drag and drop area */}
-              <div
-                className={`border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer transition-colors mb-6 ${
-                  isDragging
-                    ? "border-blue-500 bg-blue-50"
-                    : "hover:border-blue-500"
-                }`}
-                onClick={triggerFileInput}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                />
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 mx-auto text-gray-400 mb-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-
-                <p className="text-base text-gray-700 font-medium">
-                  {uploadedFile
-                    ? `Selected: ${uploadedFile.name}`
-                    : "Drop CSV file here or click to browse"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Supports CSV files with Resume_str column
-                </p>
-              </div>
-
-              {/* Button to use example dataset */}
-              <div className="text-center mb-4">
-                <button
-                  onClick={handleUseExampleDataset}
-                  disabled={isLoading}
-                  className="text-sm text-blue-500 hover:text-blue-700 disabled:opacity-50"
-                >
-                  Or use an Example Dataset
-                </button>
-              </div>
-              
-              {exampleDatasetName && (
-                <p className="text-center text-sm text-green-600 mb-4">
-                  Using example: {exampleDatasetName}
-                </p>
-              )}
-
-              {/* Control panel */}
-              <div className="bg-gray-50 p-4 rounded-xl mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Controls
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Number of clusters */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label
-                        htmlFor="cluster-count"
-                        className="text-xs font-medium text-gray-700"
-                      >
-                        Clusters
-                      </label>
-                      <span className="text-xs text-gray-500 bg-white px-1.5 py-0.5 rounded-md shadow-sm">
-                        {clusterCount}
-                      </span>
-                    </div>
-                    <input
-                      id="cluster-count"
-                      type="range"
-                      min="1"
-                      max="10"
-                      value={clusterCount}
-                      onChange={handleClusterCountChange}
-                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-500">
-                      <span>1</span>
-                      <span>10</span>
-                    </div>
-                  </div>
-
-                  {/* Aggressiveness */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label
-                        htmlFor="aggressiveness"
-                        className="text-xs font-medium text-gray-700"
-                      >
-                        Aggressiveness
-                      </label>
-                      <span className="text-xs text-gray-500 bg-white px-1.5 py-0.5 rounded-md shadow-sm">
-                        {aggressiveness}%
-                      </span>
-                    </div>
-                    <input
-                      id="aggressiveness"
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={aggressiveness}
-                      onChange={handleAggressivenessChange}
-                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-500">
-                      <span>0%</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Format example - updated to match the screenshot */}
-              <div className="mb-8">
-                <p className="text-lg text-gray-700 mb-2">Expected format:</p>
-                <div className="bg-gray-100 p-4 rounded-lg text-sm font-mono overflow-x-auto text-gray-700 mb-2">
-                  id,Resume_str,Category
-                  <br />
-                  1,"I am a software engineer with 5 years of experience...",IT
-                  <br />
-                  ...
-                </div>
-              </div>
-
-              {/* Action buttons - updated to match the screenshot */}
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={processUpload}
-                  disabled={!uploadedFile || isLoading}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-                >
-                  {isLoading ? "Processing..." : "Process CSV"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <UploadModal 
+        showUploadModal={showUploadModal}
+        setShowUploadModal={setShowUploadModal}
+        isDragging={isDragging}
+        setIsDragging={setIsDragging}
+        uploadedFile={uploadedFile}
+        setUploadedFile={setUploadedFile}
+        handleFileChange={handleFileChange}
+        handleDragOver={handleDragOver}
+        handleDragLeave={handleDragLeave}
+        handleDrop={handleDrop}
+        triggerFileInput={triggerFileInput}
+        fileInputRef={fileInputRef}
+        handleUseExampleDataset={handleUseExampleDataset}
+        exampleDatasetName={exampleDatasetName}
+        clusterCount={clusterCount}
+        handleClusterCountChange={handleClusterCountChange}
+        aggressiveness={aggressiveness}
+        handleAggressivenessChange={handleAggressivenessChange}
+        processUpload={processUpload}
+        isLoading={isLoading}
+      />
     </main>
   );
 }
