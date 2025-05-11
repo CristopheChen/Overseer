@@ -1,16 +1,16 @@
-// API client for interacting with the backend
+// api client for interacting with the backend
 const API_BASE_URL = "http://localhost:3002/api";
 
-// Ensure we don't have trailing slashes that might cause double-slash issues
+// ensure we don't have trailing slashes that might cause double-slash issues
 const getApiUrl = (endpoint) => {
-  // Remove any leading slash from the endpoint to avoid double slashes
+  // remove any leading slash from the endpoint to avoid double slashes
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   return `${API_BASE_URL}/${cleanEndpoint}`;
 };
 
 /**
- * Check if the API is running
- * @returns {Promise<Object>} Status information
+ * check if the API is running
+ * @returns {Promise<Object>} status information
  */
 export const getApiStatus = async () => {
   try {
@@ -23,10 +23,10 @@ export const getApiStatus = async () => {
 };
 
 /**
- * Upload a CSV file to use as the dataset for unbiasing
- * @param {File} file - The CSV file to upload
- * @param {number} clusterCount - Number of clusters to create (1-10)
- * @returns {Promise<Object>} Upload result with job ID
+ * upload a CSV file to use as the dataset for unbiasing
+ * @param {File} file - the CSV file to upload
+ * @param {number} clusterCount - number of clusters to create (1-10)
+ * @returns {Promise<Object>} upload result with job ID
  */
 export const uploadDataset = async (file, clusterCount) => {
   try {
@@ -52,9 +52,9 @@ export const uploadDataset = async (file, clusterCount) => {
 };
 
 /**
- * Check the status of a processing job
- * @param {string} jobId - The job ID to check
- * @returns {Promise<Object>} Job status information
+ * check the status of a processing job
+ * @param {string} jobId - the job ID to check
+ * @returns {Promise<Object>} job status information
  */
 export const getJobStatus = async (jobId) => {
   try {
@@ -73,8 +73,8 @@ export const getJobStatus = async (jobId) => {
 };
 
 /**
- * Get information about which datasets are available
- * @returns {Promise<Object>} Available datasets information
+ * get information about which datasets are available
+ * @returns {Promise<Object>} available datasets information
  */
 export const getAvailableDatasets = async () => {
   try {
@@ -87,11 +87,11 @@ export const getAvailableDatasets = async () => {
 };
 
 /**
- * Fetch a page of data from any paginated dataset endpoint
+ * fetch a page of data from any paginated dataset endpoint
  * @param {string} endpoint - API endpoint path without the base URL
- * @param {number} page - Page number (default: 1)
- * @param {number} pageSize - Number of records per page (default: 100)
- * @returns {Promise<Object>} Paginated data
+ * @param {number} page - page number (default: 1)
+ * @param {number} pageSize - number of records per page (default: 100)
+ * @returns {Promise<Object>} paginated data
  */
 export const fetchPaginatedDataset = async (endpoint, page = 1, pageSize = 100) => {
   try {
@@ -113,48 +113,48 @@ export const fetchPaginatedDataset = async (endpoint, page = 1, pageSize = 100) 
 };
 
 /**
- * Get a page of the cleaned resumes dataset
- * @param {number} page - Page number
- * @param {number} pageSize - Number of records per page
- * @returns {Promise<Object>} Paginated data
+ * get a page of the cleaned resumes dataset
+ * @param {number} page - page number
+ * @param {number} pageSize - number of records per page
+ * @returns {Promise<Object>} paginated data
  */
 export const getCleanedResumes = (page = 1, pageSize = 100) => {
   return fetchPaginatedDataset("cleaned_resumes", page, pageSize);
 };
 
 /**
- * Get a page of the unbiased resumes dataset
- * @param {number} page - Page number
- * @param {number} pageSize - Number of records per page
- * @returns {Promise<Object>} Paginated data
+ * get a page of the unbiased resumes dataset
+ * @param {number} page - page number
+ * @param {number} pageSize - number of records per page
+ * @returns {Promise<Object>} paginated data
  */
 export const getUnbiasedResumes = (page = 1, pageSize = 100) => {
   return fetchPaginatedDataset("unbiased_resumes", page, pageSize);
 };
 
 /**
- * Get a page of the removed entries dataset
- * @param {number} page - Page number
- * @param {number} pageSize - Number of records per page
- * @returns {Promise<Object>} Paginated data
+ * get a page of the removed entries dataset
+ * @param {number} page - page number
+ * @param {number} pageSize - number of records per page
+ * @returns {Promise<Object>} paginated data
  */
 export const getRemovedEntries = (page = 1, pageSize = 100) => {
   return fetchPaginatedDataset("removed_entries", page, pageSize);
 };
 
 /**
- * Get a page of the all_clusters dataset
- * @param {number} page - Page number
- * @param {number} pageSize - Number of records per page
- * @returns {Promise<Object>} Paginated data
+ * get a page of the all_clusters dataset
+ * @param {number} page - page number
+ * @param {number} pageSize - number of records per page
+ * @returns {Promise<Object>} paginated data
  */
 export const getAllClustersDataset = (page = 1, pageSize = 100) => {
   return fetchPaginatedDataset("all_clusters", page, pageSize);
 };
 
 /**
- * Get information about all clusters
- * @returns {Promise<Object>} All clusters information
+ * get information about all clusters
+ * @returns {Promise<Object>} all clusters information
  */
 export const getAllClustersInfo = async () => {
   try {
@@ -173,11 +173,11 @@ export const getAllClustersInfo = async () => {
 };
 
 /**
- * Get a specific cluster by ID
- * @param {number} clusterId - Cluster ID
- * @param {number} page - Page number
- * @param {number} pageSize - Number of records per page
- * @returns {Promise<Object>} Cluster data
+ * get a specific cluster by ID
+ * @param {number} clusterId - cluster ID
+ * @param {number} page - page number
+ * @param {number} pageSize - number of records per page
+ * @returns {Promise<Object>} cluster data
  */
 export const getCluster = async (clusterId, page = 1, pageSize = 100) => {
   try {
@@ -200,8 +200,8 @@ export const getCluster = async (clusterId, page = 1, pageSize = 100) => {
 };
 
 /**
- * Get all cluster analyses
- * @returns {Promise<Object>} All analyses
+ * get all cluster analyses
+ * @returns {Promise<Object>} all analyses
  */
 export const getAllClusterAnalyses = async () => {
   try {
@@ -220,8 +220,8 @@ export const getAllClusterAnalyses = async () => {
 };
 
 /**
- * Fetches the unbiased embeddings data for console logging
- * @returns {Promise<Object>} The embeddings data
+ * fetches the unbiased embeddings data for console logging
+ * @returns {Promise<Object>} the embeddings data
  */
 export const getUnbiasedEmbeddingsData = async () => {
     try {
@@ -240,9 +240,9 @@ export const getUnbiasedEmbeddingsData = async () => {
   };
 
 /**
- * Get analysis for a specific cluster
- * @param {number} clusterId - Cluster ID
- * @returns {Promise<Object>} Cluster analysis
+ * get analysis for a specific cluster
+ * @param {number} clusterId - cluster ID
+ * @returns {Promise<Object>} cluster analysis
  */
 export const getClusterAnalysis = async (clusterId) => {
   try {
@@ -261,8 +261,8 @@ export const getClusterAnalysis = async (clusterId) => {
 };
 
 /**
- * Get the unbiasing summary
- * @returns {Promise<Object>} Unbiasing summary
+ * get the unbiasing summary
+ * @returns {Promise<Object>} unbiasing summary
  */
 export const getUnbiasingSummary = async () => {
   try {
@@ -281,9 +281,9 @@ export const getUnbiasingSummary = async () => {
 };
 
 /**
- * Download a file from the API
- * @param {string} fileType - Type of file to download (e.g., "cleaned_resumes", "unbiased_resumes")
- * @returns {Promise<Blob>} File blob that can be saved using FileSaver or similar
+ * download a file from the API
+ * @param {string} fileType - type of file to download (e.g., "cleaned_resumes", "unbiased_resumes")
+ * @returns {Promise<Blob>} file blob that can be saved using FileSaver or similar
  */
 export const downloadFile = async (fileType) => {
   try {
@@ -302,9 +302,9 @@ export const downloadFile = async (fileType) => {
 };
 
 /**
- * Save a blob as a file in the browser
- * @param {Blob} blob - File blob
- * @param {string} filename - Filename to save as
+ * save a blob as a file in the browser
+ * @param {Blob} blob - file blob
+ * @param {string} filename - filename to save as
  */
 export const saveFile = (blob, filename) => {
   if (!blob) return;
@@ -321,8 +321,8 @@ export const saveFile = (blob, filename) => {
 };
 
 /**
- * Fetch all dataset statistics
- * @returns {Promise<Object>} Statistics for all available datasets
+ * fetch all dataset statistics
+ * @returns {Promise<Object>} statistics for all available datasets
  */
 export const fetchAllDatasetStats = async () => {
   try {
@@ -380,8 +380,8 @@ export const fetchAllDatasetStats = async () => {
 };
 
 /**
- * Fetches the removed embeddings data for console logging
- * @returns {Promise<Object>} The embeddings data
+ * fetches the removed embeddings data for console logging
+ * @returns {Promise<Object>} the embeddings data
  */
 export const getRemovedEmbeddingsData = async () => {
     try {

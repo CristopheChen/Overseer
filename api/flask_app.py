@@ -4,15 +4,15 @@ import os
 import json
 import subprocess
 from pathlib import Path
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS  # import CORS
 import uuid
 import shutil
 import numpy as np
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})  # Enable CORS with more specific configuration
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # enable CORS with more specific configuration
 
-# Create uploads directory if it doesn't exist
+# create uploads directory if it doesn't exist
 UPLOAD_FOLDER = Path("uploads")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
@@ -22,12 +22,12 @@ def index():
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Basic health check endpoint"""
+    # basic health check endpoint
     return jsonify({"status": "healthy", "message": "API is running"})
 
 @app.route('/api/datasets/available', methods=['GET'])
 def available_datasets():
-    """Return information about which datasets are available"""
+    # return information about which datasets are available
     available = {
         "cleaned_resumes": os.path.exists("cleaned_resumes.csv"),
         "unbiased_resumes": os.path.exists("unbiased_dataset/unbiased_resumes.csv"),
@@ -36,7 +36,7 @@ def available_datasets():
         "cluster_analysis": os.path.exists("cluster_analysis"),
     }
     
-    # Check for individual cluster files
+    # check for individual cluster files
     available["individual_clusters"] = []
     if os.path.exists("clusters"):
         cluster_files = list(Path("clusters").glob("cluster_*.csv"))
@@ -46,7 +46,7 @@ def available_datasets():
 
 @app.route('/api/cleaned_resumes', methods=['GET'])
 def get_cleaned_resumes():
-    """Return the cleaned resumes dataset with pagination"""
+    # return the cleaned resumes dataset with pagination
     file_path = "cleaned_resumes.csv"
     if not os.path.exists(file_path):
         return jsonify({"error": "Cleaned resumes dataset not found"}), 404
@@ -55,7 +55,7 @@ def get_cleaned_resumes():
 
 @app.route('/api/unbiased_resumes', methods=['GET'])
 def get_unbiased_resumes():
-    """Return the unbiased resumes dataset with pagination"""
+    # return the unbiased resumes dataset with pagination
     file_path = "unbiased_dataset/unbiased_resumes.csv"
     if not os.path.exists(file_path):
         return jsonify({"error": "Unbiased resumes dataset not found"}), 404
@@ -64,7 +64,7 @@ def get_unbiased_resumes():
 
 @app.route('/api/removed_entries', methods=['GET'])
 def get_removed_entries():
-    """Return the removed entries dataset with pagination"""
+    # return the removed entries dataset with pagination
     file_path = "unbiased_dataset/removed_entries.csv"
     if not os.path.exists(file_path):
         return jsonify({"error": "Removed entries dataset not found"}), 404
@@ -73,7 +73,7 @@ def get_removed_entries():
 
 @app.route('/api/all_clusters', methods=['GET'])
 def get_all_clusters():
-    """Return the all clusters dataset with pagination"""
+    # return the all clusters dataset with pagination
     file_path = "clusters/all_clusters.csv"
     if not os.path.exists(file_path):
         return jsonify({"error": "All clusters dataset not found"}), 404
@@ -82,19 +82,19 @@ def get_all_clusters():
 
 @app.route('/api/unbiased_embeddings_data', methods=['GET'])
 def get_unbiased_embeddings_data():
-    """Return the unbiased embeddings as JSON"""
+    # return the unbiased embeddings as JSON
     file_path = "unbiased_dataset/unbiased_embeddings_6d.npy"
     if not os.path.exists(file_path):
         return jsonify({"error": "Unbiased embeddings not found"}), 404
     
     try:
-        # Load the numpy array
+        # load the numpy array
         embeddings = np.load(file_path)
         
-        # Convert to list for JSON serialization
+        # convert to list for JSON serialization
         embeddings_list = embeddings.tolist()
         
-        # Return the full embeddings data
+        # return the full embeddings data
         return jsonify({
             "success": True,
             "embeddings": embeddings_list,
@@ -107,19 +107,19 @@ def get_unbiased_embeddings_data():
 
 @app.route('/api/removed_embeddings_data', methods=['GET'])
 def get_removed_embeddings_data():
-    """Return the removed embeddings as JSON"""
+    # return the removed embeddings as JSON
     file_path = "unbiased_dataset/removed_embeddings_6d.npy"
     if not os.path.exists(file_path):
         return jsonify({"error": "Removed embeddings not found"}), 404
     
     try:
-        # Load the numpy array
+        # load the numpy array
         embeddings = np.load(file_path)
         
-        # Convert to list for JSON serialization
+        # convert to list for JSON serialization
         embeddings_list = embeddings.tolist()
         
-        # Return the full embeddings data
+        # return the full embeddings data
         return jsonify({
             "success": True,
             "embeddings": embeddings_list,
@@ -131,36 +131,36 @@ def get_removed_embeddings_data():
         return jsonify({"error": f"Error processing embeddings: {str(e)}"}), 500
 
 def get_paginated_dataset(file_path, dataset_name):
-    """Helper function to return a paginated dataset"""
-    # Get pagination parameters
+    # helper function to return a paginated dataset
+    # get pagination parameters
     page = request.args.get('page', default=1, type=int)
     page_size = request.args.get('page_size', default=100, type=int)
     
-    # Limit page_size to prevent huge responses
+    # limit page_size to prevent huge responses
     page_size = min(page_size, 1000)
     
     try:
-        # Load the dataset
+        # load the dataset
         df = pd.read_csv(file_path)
         
-        # Get total records and pages
+        # get total records and pages
         total_records = len(df)
         total_pages = (total_records + page_size - 1) // page_size
         
-        # Validate page number
+        # validate page number
         if page < 1:
             page = 1
         if page > total_pages and total_pages > 0:
             page = total_pages
         
-        # Calculate start and end indices
+        # calculate start and end indices
         start_idx = (page - 1) * page_size
         end_idx = min(start_idx + page_size, total_records)
         
-        # Get the page of data
+        # get the page of data
         records = df.iloc[start_idx:end_idx].to_dict('records')
         
-        # Return the paginated response
+        # return the paginated response
         return jsonify({
             "dataset": dataset_name,
             "total_records": total_records,
@@ -175,16 +175,16 @@ def get_paginated_dataset(file_path, dataset_name):
 
 @app.route('/api/clusters', methods=['GET'])
 def get_clusters():
-    """Return embeddings for all clusters"""
-    # First check if clusters directory exists
+    # return embeddings for all clusters
+    # first check if clusters directory exists
     clusters_dir = Path("clusters")
     if not clusters_dir.exists():
         return jsonify({"error": "Clusters directory not found"}), 404
     
-    # Look for 6D embedding files instead of CSV files
+    # look for 6D embedding files instead of CSV files
     embedding_files = list(clusters_dir.glob("cluster_*_embeddings_6d.npy"))
     
-    # If no embedding files found, try looking in unbiased_dataset directory
+    # if no embedding files found, try looking in unbiased_dataset directory
     if not embedding_files:
         embedding_files = list(Path("unbiased_dataset").glob("cluster_*_embeddings_6d.npy"))
     
@@ -195,22 +195,22 @@ def get_clusters():
         all_clusters = {}
         
         for embedding_file in embedding_files:
-            # Extract cluster number from filename (cluster_1_embeddings_6d.npy -> 1)
+            # extract cluster number from filename (cluster_1_embeddings_6d.npy -> 1)
             file_name = embedding_file.stem
             parts = file_name.split("_")
             if len(parts) >= 2:
                 cluster_id = int(parts[1])
             else:
-                continue  # Skip if filename format is unexpected
+                continue  # skip if filename format is unexpected
                 
-            # Load the embeddings
+            # load the embeddings
             try:
                 embeddings = np.load(embedding_file)
                 
-                # Convert to list for JSON serialization
+                # convert to list for JSON serialization
                 embeddings_list = embeddings.tolist()
                 
-                # Store metadata about the embeddings
+                # store metadata about the embeddings
                 all_clusters[f"cluster_{cluster_id}"] = {
                     "count": len(embeddings),
                     "dimensions": embeddings.shape[1] if len(embeddings.shape) > 1 else 0,
@@ -233,7 +233,7 @@ def get_clusters():
 
 @app.route('/api/clusters/<cluster_id>', methods=['GET'])
 def get_cluster(cluster_id):
-    """Return a specific cluster by ID"""
+    # return a specific cluster by ID
     try:
         cluster_id = int(cluster_id)
         file_path = f"clusters/cluster_{cluster_id}.csv"
@@ -250,7 +250,7 @@ def get_cluster(cluster_id):
 
 @app.route('/api/analysis/clusters', methods=['GET'])
 def get_all_cluster_analyses():
-    """Return all cluster analyses"""
+    # return all cluster analyses
     file_path = "cluster_analysis/all_clusters_analysis.json"
     if not os.path.exists(file_path):
         return jsonify({"error": "Cluster analyses not found"}), 404
@@ -266,7 +266,7 @@ def get_all_cluster_analyses():
 
 @app.route('/api/analysis/clusters/<cluster_id>', methods=['GET'])
 def get_cluster_analysis(cluster_id):
-    """Return the analysis for a specific cluster"""
+    # return the analysis for a specific cluster
     try:
         cluster_id = int(cluster_id)
         file_path = f"cluster_analysis/cluster_{cluster_id}_analysis.txt"
@@ -289,7 +289,7 @@ def get_cluster_analysis(cluster_id):
 
 @app.route('/api/summary', methods=['GET'])
 def get_unbiasing_summary():
-    """Return the unbiasing summary if it exists"""
+    # return the unbiasing summary if it exists
     file_path = "unbiased_dataset/unbiasing_summary.txt"
     
     if not os.path.exists(file_path):
@@ -308,8 +308,8 @@ def get_unbiasing_summary():
 
 @app.route('/api/download/<file_type>', methods=['GET'])
 def download_file(file_type):
-    """Direct file download endpoint for various outputs"""
-    # Define file paths for different file types
+    # direct file download endpoint for various outputs
+    # define file paths for different file types
     file_paths = {
         "cleaned_resumes": "cleaned_resumes.csv",
         "unbiased_resumes": "unbiased_dataset/unbiased_resumes.csv",
@@ -319,7 +319,7 @@ def download_file(file_type):
         "summary": "unbiased_dataset/unbiasing_summary.txt"
     }
     
-    # Check if the requested file type exists
+    # check if the requested file type exists
     if file_type not in file_paths:
         return jsonify({"error": f"Unknown file type: {file_type}"}), 404
     
@@ -332,11 +332,11 @@ def download_file(file_type):
     except Exception as e:
         return jsonify({"error": f"Error downloading file: {str(e)}"}), 500
 
-# Add file upload endpoint
+# add file upload endpoint
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     """
-    Upload a CSV file to use as the dataset for the analysis pipeline
+    upload a CSV file to use as the dataset for the analysis pipeline
     """
     if 'file' not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
@@ -349,26 +349,26 @@ def upload_file():
     if not file.filename.endswith('.csv'):
         return jsonify({"error": "Only CSV files are supported"}), 400
     
-    # Get cluster count from request (default to 6 if not provided)
+    # get cluster count from request (default to 6 if not provided)
     cluster_count = request.form.get('cluster_count', '6')
     try:
         cluster_count = int(cluster_count)
-        # Ensure cluster count is within valid range
+        # ensure cluster count is within valid range
         cluster_count = max(1, min(10, cluster_count))
     except ValueError:
-        cluster_count = 6  # Default if invalid value
+        cluster_count = 6  # default if invalid value
     
-    # Create a unique ID for this upload
+    # create a unique ID for this upload
     upload_id = str(uuid.uuid4())
     upload_dir = UPLOAD_FOLDER / upload_id
     upload_dir.mkdir(exist_ok=True)
     
-    # Save the uploaded file
+    # save the uploaded file
     file_path = upload_dir / "Resume.csv"
     file.save(file_path)
     
     try:
-        # Validate the CSV file
+        # validate the CSV file
         df = pd.read_csv(file_path)
         if 'Resume_str' not in df.columns:
             return jsonify({
@@ -377,11 +377,11 @@ def upload_file():
             
         rows_count = len(df)
         
-        # Run the pipeline asynchronously with the cluster count parameter
+        # run the pipeline asynchronously with the cluster count parameter
         subprocess.Popen(
             ["python", "./main.py", "--input", str(file_path), "--job_id", upload_id, 
              "--cluster_count", str(cluster_count)],
-            # Redirect output to a log file
+            # redirect output to a log file
             stdout=open(upload_dir / "pipeline.log", "w"),
             stderr=subprocess.STDOUT
         )
@@ -395,23 +395,23 @@ def upload_file():
         })
         
     except Exception as e:
-        # Clean up on error
+        # clean up on error
         shutil.rmtree(upload_dir, ignore_errors=True)
         return jsonify({"error": f"Error processing file: {str(e)}"}), 500
 
 @app.route('/api/jobs/<job_id>/status', methods=['GET'])
 def get_job_status(job_id):
-    """Check the status of a processing job"""
+    # check the status of a processing job
     job_dir = UPLOAD_FOLDER / job_id
     
     if not job_dir.exists():
         return jsonify({"error": "Job not found"}), 404
     
-    # Check for completion indicators
+    # check for completion indicators
     completed = (job_dir / "completed").exists()
     failed = (job_dir / "failed").exists()
     
-    # Get log contents if available
+    # get log contents if available
     log_path = job_dir / "pipeline.log"
     log_content = ""
     if log_path.exists():
@@ -438,5 +438,5 @@ def get_job_status(job_id):
         })
 
 if __name__ == '__main__':
-    # Run the Flask app
+    # run the Flask app
     app.run(debug=True, host='0.0.0.0', port=3002) 

@@ -20,7 +20,7 @@ def main():
                         help='Directory to save evaluation results')
     args = parser.parse_args()
     
-    # Create output directory if it doesn't exist
+    # create output directory if it doesn't exist
     output_dir = Path(args.output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
     
@@ -28,7 +28,7 @@ def main():
     embeddings = np.load(args.embeddings_path)
     print(f"Embeddings shape: {embeddings.shape}")
     
-    # Perform K-means clustering
+    # perform K-means clustering
     print(f"\nPerforming K-means clustering with {args.n_clusters} clusters...")
     start_time = time.time()
     kmeans = KMeans(n_clusters=args.n_clusters, random_state=args.random_state, n_init=10)
@@ -36,11 +36,11 @@ def main():
     elapsed_time = time.time() - start_time
     print(f"K-means clustering completed in {elapsed_time:.2f} seconds")
     
-    # Count the number of points in each cluster
+    # count the number of points in each cluster
     cluster_counts = Counter(cluster_labels)
     total_points = len(cluster_labels)
     
-    # Find the 10 largest clusters
+    # find the 10 largest clusters
     largest_clusters = cluster_counts.most_common(10)
     
     print("\n=== 10 Largest Clusters ===")
@@ -50,7 +50,7 @@ def main():
         percentage = (count / total_points) * 100
         print(f"{i:4d} | {cluster_id:10d} | {count:4d} | {percentage:6.2f}%")
     
-    # Calculate and display statistics
+    # calculate and display statistics
     cluster_sizes = list(cluster_counts.values())
     min_size = min(cluster_sizes)
     max_size = max(cluster_sizes)
@@ -65,10 +65,10 @@ def main():
     print(f"Average cluster size: {avg_size:.2f}")
     print(f"Median cluster size: {median_size:.2f}")
     
-    # Calculate inertia (sum of squared distances to closest centroid)
+    # calculate inertia (sum of squared distances to closest centroid)
     print(f"Inertia (sum of squared distances): {kmeans.inertia_:.2f}")
     
-    # Plot cluster size distribution
+    # plot cluster size distribution
     plt.figure(figsize=(10, 6))
     plt.hist(cluster_sizes, bins=20)
     plt.title('Distribution of Cluster Sizes')
@@ -78,12 +78,12 @@ def main():
     plt.savefig(output_dir / 'cluster_size_distribution.png')
     print(f"\nSaved cluster size distribution plot to {output_dir / 'cluster_size_distribution.png'}")
     
-    # Save cluster assignments
+    # save cluster assignments
     cluster_assignment_path = output_dir / 'cluster_assignments.npy'
     np.save(cluster_assignment_path, cluster_labels)
     print(f"Saved cluster assignments to {cluster_assignment_path}")
     
-    # Save cluster statistics as CSV
+    # save cluster statistics as CSV
     with open(output_dir / 'cluster_statistics.csv', 'w') as f:
         f.write("cluster_id,size,percentage\n")
         for cluster_id, count in cluster_counts.items():

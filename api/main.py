@@ -7,14 +7,14 @@ import sys
 import argparse
 import shutil
 
-# Import functions from our other files
+# import functions from our other files
 from embeddings import main as embeddings_main
 from cluster_analysis import main as cluster_analysis_main
 from create_unbiased_dataset import create_unbiased_dataset
 
-# Setup argument parser
+# setup argument parser
 def parse_args():
-    """Parse command-line arguments"""
+    # parse command-line arguments
     parser = argparse.ArgumentParser(description='Process resume data')
     parser.add_argument('--input', type=str, help='Path to input CSV file')
     parser.add_argument('--job_id', type=str, help='Job ID for this processing run')
@@ -22,7 +22,7 @@ def parse_args():
     
     return parser.parse_args()
 
-# Setup logging
+# setup logging
 def setup_logging(job_id=None):
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
@@ -30,15 +30,15 @@ def setup_logging(job_id=None):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     
     if job_id:
-        # Use job_id for the log filename
+        # use job_id for the log filename
         log_file = log_dir / f"unbiasing_pipeline_{job_id}.log"
-        # Also create a symbolic link to the job directory
+        # also create a symbolic link to the job directory
         job_dir = Path("uploads") / job_id
         job_log_file = job_dir / "pipeline.log"
     else:
         log_file = log_dir / f"unbiasing_pipeline_{timestamp}.log"
     
-    # Configure logging to write to both file and console
+    # configure logging to write to both file and console
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
@@ -52,7 +52,7 @@ def setup_logging(job_id=None):
     return log_file
 
 def count_files_in_dir(directory):
-    """Count files in a directory and report their sizes"""
+    # count files in a directory and report their sizes
     if not os.path.exists(directory):
         return "Directory does not exist"
     
@@ -69,7 +69,7 @@ def count_files_in_dir(directory):
     return f"{len(result)} files, total size: {total_size_mb:.2f} MB\n" + "\n".join(result)
 
 def report_file_info(file_path):
-    """Report information about a file"""
+    # report information about a file
     if not os.path.exists(file_path):
         return f"{file_path} does not exist"
     
@@ -85,18 +85,18 @@ def report_file_info(file_path):
         return f"{file_path}: {size_mb:.2f} MB"
 
 def main():
-    """Main function to execute the entire unbiasing pipeline"""
-    # Parse command-line arguments
+    # main function to execute the entire unbiasing pipeline
+    # parse command-line arguments
     args = parse_args()
     
-    # Ensure cluster count is within valid range
+    # ensure cluster count is within valid range
     cluster_count = max(1, min(10, args.cluster_count))
     
-    # Setup logging
+    # setup logging
     log_file = setup_logging(args.job_id)
     
     try:
-        # Set the input file path
+        # set the input file path
         input_file = args.input
         job_id = args.job_id
         
@@ -105,12 +105,12 @@ def main():
         else:
             logging.info("No input file specified, will use default dataset")
         
-        # Create job completion marker if job_id is provided
+        # create job completion marker if job_id is provided
         job_dir = None
         if job_id:
             job_dir = Path("uploads") / job_id
             
-        # Step 1: Generate embeddings and find clusters
+        # step 1: Generate embeddings and find clusters
         logging.info("=" * 80)
         logging.info("STEP 1: GENERATING EMBEDDINGS AND FINDING CLUSTERS")
         logging.info("=" * 80)
@@ -127,36 +127,36 @@ def main():
         logging.info(f"Generated cleaned_resumes.csv: {report_file_info('cleaned_resumes.csv')}")
         logging.info(f"Generated resume_embeddings.npy: {report_file_info('resume_embeddings.npy')}")
         
-        # Report on clusters
+        # report on clusters
         clusters_dir = Path("clusters")
         if clusters_dir.exists():
             logging.info(f"Clusters directory contents:\n{count_files_in_dir('clusters')}")
         
-        # Step 2: Analyze clusters using Cohere
+        # step 2: Analyze clusters using Cohere
         logging.info("\n" + "=" * 80)
         logging.info("STEP 2: ANALYZING CLUSTERS USING COHERE")
         logging.info("=" * 80)
         
         cluster_analysis_main()
         
-        # Report on analysis results
+        # report on analysis results
         analysis_dir = Path("cluster_analysis")
         if analysis_dir.exists():
             logging.info(f"Cluster analysis directory contents:\n{count_files_in_dir('cluster_analysis')}")
         
-        # Step 3: Create unbiased dataset
+        # step 3: Create unbiased dataset
         logging.info("\n" + "=" * 80)
         logging.info("STEP 3: CREATING UNBIASED DATASET")
         logging.info("=" * 80)
         
         unbiased_df, removed_df = create_unbiased_dataset()
         
-        # Report on unbiased dataset
+        # report on unbiased dataset
         unbiased_dir = Path("unbiased_dataset")
         if unbiased_dir.exists():
             logging.info(f"Unbiased dataset directory contents:\n{count_files_in_dir('unbiased_dataset')}")
         
-        # Final summary
+        # final summary
         logging.info("\n" + "=" * 80)
         logging.info("PIPELINE COMPLETE - SUMMARY")
         logging.info("=" * 80)
@@ -172,13 +172,13 @@ def main():
         
         logging.info("Unbiasing pipeline completed successfully!")
         
-        # Create completion marker if job_id is provided
+        # create completion marker if job_id is provided
         if job_dir:
             (job_dir / "completed").touch()
         
     except Exception as e:
         logging.error(f"Error in pipeline: {str(e)}", exc_info=True)
-        # Create failure marker if job_id is provided
+        # create failure marker if job_id is provided
         if job_id and job_dir:
             (job_dir / "failed").touch()
     

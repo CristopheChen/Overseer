@@ -27,7 +27,7 @@ const HoverInfoBox: React.FC<HoverInfoBoxProps> = ({ hoveredNode, hoverPosition 
       style={{
         left: `${hoverPosition.x}px`,
         top: `${hoverPosition.y}px`,
-        transform: "translate(0, -100%)", // Position above and to the right of the cursor/node
+        transform: "translate(0, -100%)", // position above and to the right of the cursor/node
       }}
     >
       <h3 className="text-sm font-semibold text-gray-800">

@@ -21,12 +21,12 @@ import UploadProgressOverlay from "../components/page_ui/UploadProgressOverlay";
 import SuccessNotification from "../components/page_ui/SuccessNotification";
 import UploadModal from "../components/page_ui/UploadModal";
 
-// Define interfaces for our API responses
+// define interfaces for our API responses
 interface Resume {
   id: number;
   Resume_str: string;
   Category?: string;
-  [key: string]: any; // For any other properties
+  [key: string]: any; // for any other properties
 }
 
 interface ResumesResponse {
@@ -54,7 +54,7 @@ interface UploadResponse {
   status: string;
 }
 
-// Add this interface to properly type the clusters info response
+// add this interface to properly type the clusters info response
 interface ClustersInfoResponse {
   clusters: {
     [clusterId: string]: {
@@ -65,7 +65,7 @@ interface ClustersInfoResponse {
   };
 }
 
-// Add this interface near your other interfaces
+// add this interface near your other interfaces
 interface EmbeddingsData {
   dimensions: number;
   count: number;
@@ -90,8 +90,8 @@ export default function Home() {
   const [removedEmbeddingsData, setRemovedEmbeddingsData] =
     useState<EmbeddingsData | null>(null);
   const [clusterData, setClusterData] = useState<any>(null);
-  const [clusterCount, setClusterCount] = useState<number>(5); // Default number of clusters
-  const [aggressiveness, setAggressiveness] = useState<number>(50); // Default aggressiveness (0-100)
+  const [clusterCount, setClusterCount] = useState<number>(5); // default number of clusters
+  const [aggressiveness, setAggressiveness] = useState<number>(50); // default aggressiveness (0-100)
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "uploading" | "processing" | "complete" | "error"
@@ -99,7 +99,7 @@ export default function Home() {
   const [showSuccessNotification, setShowSuccessNotification] =
     useState<boolean>(false);
   const [showDefaultObjects, setShowDefaultObjects] = useState<boolean>(true);
-  const [exampleDatasetName, setExampleDatasetName] = useState<string | null>(null); // Added for example dataset
+  const [exampleDatasetName, setExampleDatasetName] = useState<string | null>(null); // added for example dataset
 
   useEffect(() => {
     const fetchData = async () => {
@@ -107,7 +107,7 @@ export default function Home() {
         const resumesData = (await getCleanedResumes(1, 10)) as ResumesResponse;
         const summaryData = (await getUnbiasingSummary()) as SummaryResponse;
 
-        // Update state with the data
+        // update state with the data
         if (resumesData && resumesData.records) {
           setResumes(resumesData.records);
         }
@@ -130,7 +130,7 @@ export default function Home() {
     console.log(summary);
   }
 
-  // Poll for job status updates
+  // poll for job status updates
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -146,7 +146,7 @@ export default function Home() {
             setUploadStatus("complete");
             setShowSuccessNotification(true);
 
-            // Refresh data when job completes
+            // refresh data when job completes
             const resumesData = (await getCleanedResumes(
               1,
               10
@@ -162,13 +162,13 @@ export default function Home() {
               setSummary(summaryData.summary);
             }
 
-            // Fetch all cluster data at once
+            // fetch all cluster data at once
             try {
-              // Get all cluster analyses in one call
+              // get all cluster analyses in one call
               const clusterAnalyses = await getAllClusterAnalyses();
               console.log("Retrieved all cluster analyses:", clusterAnalyses);
 
-              // Get full clusters info in one call
+              // get full clusters info in one call
               const clustersInfo =
                 (await getAllClustersInfo()) as ClustersInfoResponse;
               console.log("Retrieved complete clusters info:", clustersInfo);
@@ -178,11 +178,11 @@ export default function Home() {
                 typeof clustersInfo === "object" &&
                 "clusters" in clustersInfo
               ) {
-                // Log the number of clusters found
+                // log the number of clusters found
                 const clusterIds = Object.keys(clustersInfo.clusters);
                 console.log(`Found ${clusterIds.length} clusters in total`);
 
-                // We now have all cluster data at once - no need for individual fetches
+                // we now have all cluster data at once - no need for individual fetches
                 console.log("All cluster data successfully retrieved in bulk");
               }
             } catch (error) {
@@ -191,13 +191,13 @@ export default function Home() {
 
             setIsLoading(false);
 
-            // Clear job ID after successful completion - reduced from 3000ms to 2000ms
+            // clear job ID after successful completion - reduced from 3000ms to 2000ms
             setTimeout(() => {
               setJobId(null);
               setJobStatus(null);
             }, 2000);
 
-            // Clear the success message after animation completes - reduced from 3500ms to 2000ms
+            // clear the success message after animation completes - reduced from 3500ms to 2000ms
             setTimeout(() => {
               setUploadStatus("idle");
               setShowSuccessNotification(false);
@@ -210,7 +210,7 @@ export default function Home() {
           console.error("Error checking job status:", error);
           setUploadStatus("error");
         }
-      }, 2000); // Check every 2 seconds
+      }, 2000); // check every 2 seconds
     }
 
     return () => {
@@ -225,7 +225,7 @@ export default function Home() {
   const handleFilter = async () => {
     setIsLoading(true);
     try {
-      // For now, we're just downloading the unbiased dataset
+      // for now, we're just downloading the unbiased dataset
       const blob = await downloadFile("unbiased_resumes");
       if (blob) {
         saveFile(blob, "unbiased_resumes.csv");
@@ -240,7 +240,7 @@ export default function Home() {
   const handleDownload = async () => {
     setIsLoading(true);
     try {
-      // Download the summary text
+      // download the summary text
       const blob = await downloadFile("summary");
       if (blob) {
         saveFile(blob, "unbiasing_summary.txt");
@@ -291,7 +291,7 @@ export default function Home() {
 
   const handleUseExampleDataset = async () => {
     try {
-      setIsLoading(true); // Show some loading indication
+      setIsLoading(true); // show some loading indication
       const response = await fetch("/data/example_resume_dataset.csv");
       if (!response.ok) {
         throw new Error(
@@ -303,7 +303,7 @@ export default function Home() {
         type: "text/csv",
       });
       setUploadedFile(exampleFile);
-      setExampleDatasetName(exampleFile.name); // Store the name of the example dataset
+      setExampleDatasetName(exampleFile.name); // store the name of the example dataset
       setIsLoading(false);
     } catch (error) {
       console.error("Error loading example dataset:", error);
@@ -321,7 +321,7 @@ export default function Home() {
     setShowUploadModal(false);
     setUploadStatus("uploading");
 
-    // Simulate upload progress
+    // simulate upload progress
     const progressInterval = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev >= 90) {
@@ -333,7 +333,7 @@ export default function Home() {
     }, 300);
 
     try {
-      // Upload the file to the backend with cluster count
+      // upload the file to the backend with cluster count
       const response = (await uploadDataset(
         uploadedFile,
         clusterCount
@@ -361,7 +361,7 @@ export default function Home() {
       console.log("Fetching unbiased embeddings data...");
       const data = (await getUnbiasedEmbeddingsData()) as EmbeddingsData;
 
-      // Log the entire embeddings data to console
+      // log the entire embeddings data to console
       console.log("Unbiased embeddings data:", data);
       console.log("Number of embeddings:", data.count);
       console.log("Embedding dimensions:", data.dimensions);
@@ -383,41 +383,41 @@ export default function Home() {
     setShowDefaultObjects(false);
 
     try {
-      // Get unbiased embeddings
+      // get unbiased embeddings
       const unbiasedEmbeddings =
         (await getUnbiasedEmbeddingsData()) as EmbeddingsData;
       console.log("Unbiased embeddings:", unbiasedEmbeddings);
 
-      // Get removed embeddings
+      // get removed embeddings
       const removedEmbeddings =
         (await getRemovedEmbeddingsData()) as EmbeddingsData;
       console.log("Removed embeddings:", removedEmbeddings);
 
-      // Get all cluster analyses in one call
+      // get all cluster analyses in one call
       const clusterAnalyses = await getAllClusterAnalyses();
       console.log("Retrieved all cluster analyses:", clusterAnalyses);
 
-      // Get full clusters info in one call
+      // get full clusters info in one call
       const clustersInfo = (await getAllClustersInfo()) as ClustersInfoResponse;
       console.log("Retrieved complete clusters info:", clustersInfo);
 
-      // Update state with fetched data
+      // update state with fetched data
       setEmbeddingsData(unbiasedEmbeddings);
       setRemovedEmbeddingsData(removedEmbeddings);
       setClusterData(clustersInfo);
 
       setIsLoading(false);
 
-      // Remove this alert or replace with a more subtle indication
+      // remove this alert or replace with a more subtle indication
       // alert("Successfully fetched embeddings and clusters data. Check the console.");
 
-      // Optional: You can update a state variable to show a status in the UI instead
+      // optional: You can update a state variable to show a status in the UI instead
       // setFetchStatus('success');
     } catch (error) {
       console.error("Error fetching embeddings info:", error);
       setIsLoading(false);
 
-      // Remove this alert
+      // remove this alert
       // alert("Error fetching embeddings info. Please try again.");
     }
   };
@@ -434,9 +434,9 @@ export default function Home() {
     setAggressiveness(parseInt(e.target.value));
   };
 
-  // Update the CSS animation duration in globals.css or add this style tag to your layout.tsx
+  // update the CSS animation duration in globals.css or add this style tag to your layout.tsx
   useEffect(() => {
-    // Add a style tag to the document head
+    // add a style tag to the document head
     const styleTag = document.createElement("style");
     styleTag.innerHTML = `
       @keyframes fadeOut {
@@ -450,28 +450,28 @@ export default function Home() {
     `;
     document.head.appendChild(styleTag);
 
-    // Clean up
+    // clean up
     return () => {
       document.head.removeChild(styleTag);
     };
   }, []);
 
-  // Add this function to filter clusters based on the slider value
+  // add this function to filter clusters based on the slider value
   const getFilteredClusterData = useCallback(() => {
     if (!clusterData || !clusterData.clusters) return null;
     
-    // Get all cluster IDs
+    // get all cluster IDs
     const allClusterIds = Object.keys(clusterData.clusters);
     
-    // Sort clusters by size (optional, depends on how you want to prioritize)
+    // sort clusters by size (optional, depends on how you want to prioritize)
     const sortedClusterIds = allClusterIds.sort((a, b) => 
       clusterData.clusters[b].size - clusterData.clusters[a].size
     );
     
-    // Take only the first n clusters based on slider
+    // take only the first n clusters based on slider
     const selectedClusterIds = sortedClusterIds.slice(0, clusterCount);
     
-    // Create a filtered version of the cluster data
+    // create a filtered version of the cluster data
     const filteredClusters: {[key: string]: any} = {};
     selectedClusterIds.forEach(id => {
       filteredClusters[id] = clusterData.clusters[id];
@@ -483,28 +483,28 @@ export default function Home() {
     };
   }, [clusterData, clusterCount]);
 
-  // Use the filtered data when passing to SphereScene
+  // use the filtered data when passing to SphereScene
   useEffect(() => {
-    // This effect runs when clusterCount or clusterData changes
+    // this effect runs when clusterCount or clusterData changes
     console.log(`Updating visible clusters to show ${clusterCount} clusters`);
   }, [clusterCount, clusterData]);
 
   const fetchEmbeddings = async () => {
     setIsLoading(true);
     try {
-      // Fetch unbiased embeddings
+      // fetch unbiased embeddings
       const unbiasedData = await getUnbiasedEmbeddingsData() as EmbeddingsData;
       setEmbeddingsData(unbiasedData);
       
-      // Fetch removed embeddings
+      // fetch removed embeddings
       const removedData = await getRemovedEmbeddingsData() as EmbeddingsData;
       setRemovedEmbeddingsData(removedData);
       
-      // Fetch cluster data
+      // fetch cluster data
       const clustersInfo = await getAllClustersInfo();
       setClusterData(clustersInfo);
       
-      // Only hide default objects after embeddings are fetched
+      // only hide default objects after embeddings are fetched
       setShowDefaultObjects(false);
     } catch (error) {
       console.error("Error fetching embeddings:", error);
@@ -515,23 +515,23 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen">
-      {/* Main content area - SphereScene is now effectively always rendered */}
+      {/* main content area - SphereScene is now effectively always rendered */}
       <div className="w-full h-screen">
-        {/* Simplified: SphereScene is rendered if activeTab is clusters (which it always should be) */}
+        {/* simplified: SphereScene is rendered if activeTab is clusters (which it always should be) */}
         <SphereScene
           clusterData={getFilteredClusterData()}
           unbiasedEmbeddings={embeddingsData}
           removedEmbeddings={removedEmbeddingsData}
-          clusterEmbeddings={getFilteredClusterData()} // This prop might need review based on SphereScene's needs
+          clusterEmbeddings={getFilteredClusterData()} // this prop might need review based on SphereScene's needs
           clusterCount={clusterCount}
           showDefaultObjects={showDefaultObjects}
         />
       </div>
 
-      {/* Logo at top left with good padding - persistent across all tabs */}
+      {/* logo at top left with good padding - persistent across all tabs */}
       <PageLogo />
 
-      {/* Action buttons - vertical on right side */}
+      {/* action buttons - vertical on right side */}
       <ActionButtons 
         handleUpload={handleUpload}
         handleFilter={handleFilter}
@@ -539,14 +539,14 @@ export default function Home() {
         fetchEmbeddings={fetchEmbeddings}
       />
 
-      {/* Status display if there's an active job */}
+      {/* status display if there's an active job */}
       <JobStatusDisplay 
         jobId={jobId} 
         jobStatus={jobStatus} 
         processingLog={processingLog} 
       />
 
-      {/* New Upload Progress Overlay */}
+      {/* new Upload Progress Overlay */}
       <UploadProgressOverlay 
         uploadStatus={uploadStatus}
         uploadedFile={uploadedFile}
@@ -554,10 +554,10 @@ export default function Home() {
         setUploadStatus={setUploadStatus}
       />
 
-      {/* Success notification at bottom right of screen, above instructions box */}
+      {/* success notification at bottom right of screen, above instructions box */}
       <SuccessNotification showSuccessNotification={showSuccessNotification} />
 
-      {/* Upload Modal with Backdrop Blur */}
+      {/* upload Modal with Backdrop Blur */}
       <UploadModal 
         showUploadModal={showUploadModal}
         setShowUploadModal={setShowUploadModal}

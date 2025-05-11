@@ -49,7 +49,7 @@ const ClusterControlPanel: React.FC<ClusterControlPanelProps> = ({
 
   return (
     <div className="absolute top-28 left-10 z-10 space-y-4">
-      {/* Cluster Panel */}
+      {/* cluster Panel */}
       <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-md max-w-xs">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">
           Clusters
@@ -122,7 +122,7 @@ const ClusterControlPanel: React.FC<ClusterControlPanelProps> = ({
         </button>
       </div>
 
-      {/* Cluster Analysis Panel */}
+      {/* cluster Analysis Panel */}
       {selectedCluster && (
         <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md max-h-[50vh] max-w-xs overflow-y-auto">
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 bg-blue-50 -m-3 p-3 rounded-t-lg">
